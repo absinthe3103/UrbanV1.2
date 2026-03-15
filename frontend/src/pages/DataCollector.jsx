@@ -369,97 +369,326 @@ const DataCollector = () => {
   const fsNowC=fsNow?fsColour(fsNow):null;
   const crit=sites.filter(r=>parseFloat(calcFs(r.mohrReadings?.[0]||{})||0)<1.2).length;
 
-  return(
+  return (
     <div style={s.page}>
       {/* Header */}
       <div style={s.header}>
         <div>
           <div style={s.eyebrow}>URBAN FOUNDATION GUARDIAN</div>
           <h1 style={s.title}>Foundation Data Entry</h1>
-          <p style={s.subtitle}>Enter site data · Multiple Mohr-Coulomb readings per site · Persisted to PostgreSQL</p>
+          <p style={s.subtitle}>
+            Enter site data · Multiple Mohr-Coulomb readings per site ·
+            Persisted to PostgreSQL
+          </p>
         </div>
-        {sites.length>0&&(
-          <div style={{padding:"6px 16px",borderRadius:20,background:"#dbeafe",border:"1px solid #93c5fd",color:"#1e40af",fontSize:11,fontWeight:700}}>
-            {sites.length} site{sites.length!==1?"s":""} in queue
+        {sites.length > 0 && (
+          <div style={{ display: "flex", gap: 8 }}>
+            <div
+              style={{
+                padding: "6px 16px",
+                borderRadius: 20,
+                background: "#dbeafe",
+                border: "1px solid #93c5fd",
+                color: "#1e40af",
+                fontSize: 11,
+                fontWeight: 700,
+              }}
+            >
+              📊 {sites.length} in queue
+            </div>
+            {crit > 0 && (
+              <div
+                style={{
+                  padding: "6px 16px",
+                  borderRadius: 20,
+                  background: "#fee2e2",
+                  border: "1px solid #fca5a5",
+                  color: "#991b1b",
+                  fontSize: 11,
+                  fontWeight: 700,
+                }}
+              >
+                🔴 {crit} critical
+              </div>
+            )}
           </div>
         )}
       </div>
 
       {/* CSV import + live FS preview */}
-      <CsvPanel onImport={importSites} fsNow={fsNow} fsNowC={fsNowC} mohrDraft={mohrDraft}/>
+      <CsvPanel
+        onImport={importSites}
+        fsNow={fsNow}
+        fsNowC={fsNowC}
+        mohrDraft={mohrDraft}
+      />
 
       {/* Site + Terzaghi */}
-      <Card style={{marginBottom:16}}>
-        <SectionHeader icon="🏗️" label="Site & Foundation" sub="Enter once per site"/>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:16,marginBottom:16}}>
-          {SITE_FIELDS.map(f=><Field key={f.key} label={f.label} unit={f.unit} fieldKey={f.key} value={siteData[f.key]} onChange={hs} hint={f.hint} type={f.type||"number"}/>)}
+      <Card style={{ marginBottom: 16 }}>
+        <SectionHeader
+          icon="🏗️"
+          label="Site & Foundation"
+          sub="Enter once per site"
+        />
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(4,1fr)",
+            gap: 16,
+            marginBottom: 16,
+          }}
+        >
+          {SITE_FIELDS.map((f) => (
+            <Field
+              key={f.key}
+              label={f.label}
+              unit={f.unit}
+              fieldKey={f.key}
+              value={siteData[f.key]}
+              onChange={hs}
+              hint={f.hint}
+              type={f.type || "number"}
+            />
+          ))}
         </div>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:16,marginBottom:16}}>
-          <SelectF label="Building Category" fieldKey="buildingType" value={siteData.buildingType} onChange={hs} options={BUILDING_OPTIONS}/>
-          <SelectF label="Soil Type"          fieldKey="soilType"     value={siteData.soilType}     onChange={hs} options={SOIL_TYPES}/>
-          <Field label="SPT N-Value" unit="N" fieldKey="sptN" value={siteData.sptN} onChange={hs} hint="22"/>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(3,1fr)",
+            gap: 16,
+            marginBottom: 16,
+          }}
+        >
+          <SelectF
+            label="Building Category"
+            fieldKey="buildingType"
+            value={siteData.buildingType}
+            onChange={hs}
+            options={BUILDING_OPTIONS}
+          />
+          <SelectF
+            label="Soil Type"
+            fieldKey="soilType"
+            value={siteData.soilType}
+            onChange={hs}
+            options={SOIL_TYPES}
+          />
+          <Field
+            label="SPT N-Value"
+            unit="N"
+            fieldKey="sptN"
+            value={siteData.sptN}
+            onChange={hs}
+            hint="22"
+          />
         </div>
-        <div style={{borderTop:"1px solid #f1f5f9",paddingTop:16}}>
-          <SectionHeader icon="🏛️" label="Bearing Capacity Parameters" sub="Terzaghi qu & qa"/>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:16}}>
-            {TERZAGHI_FIELDS.map(f=><Field key={f.key} label={f.label} unit={f.unit} fieldKey={f.key} value={siteData[f.key]} onChange={hs} hint={f.hint}/>)}
+        <div style={{ borderTop: "1px solid #f1f5f9", paddingTop: 16 }}>
+          <SectionHeader
+            icon="🏛️"
+            label="Bearing Capacity Parameters"
+            sub="Terzaghi qu & qa"
+          />
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(5,1fr)",
+              gap: 16,
+            }}
+          >
+            {TERZAGHI_FIELDS.map((f) => (
+              <Field
+                key={f.key}
+                label={f.label}
+                unit={f.unit}
+                fieldKey={f.key}
+                value={siteData[f.key]}
+                onChange={hs}
+                hint={f.hint}
+              />
+            ))}
           </div>
         </div>
       </Card>
 
       {/* Mohr readings */}
-      <Card style={{marginBottom:16}}>
-        <SectionHeader icon="⚖️" label="Mohr-Coulomb Readings"
+      <Card style={{ marginBottom: 16 }}>
+        <SectionHeader
+          icon="⚖️"
+          label="Mohr-Coulomb Readings"
           sub="Each reading has its own X,Y coordinate"
-          note={`${mohrList.length} reading${mohrList.length!==1?"s":""} added`}/>
-        <div style={{display:"grid",gridTemplateColumns:"80px 80px 1fr",gap:12,alignItems:"end",marginBottom:12}}>
-          <Field label="X (m)" unit="" fieldKey="measureX" value={mohrDraft.measureX} onChange={hm} hint="5"/>
-          <Field label="Y (m)" unit="" fieldKey="measureY" value={mohrDraft.measureY} onChange={hm} hint="8"/>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:12}}>
-            {MOHR_FIELDS.map(f=><Field key={f.key} label={f.label} unit={f.unit} fieldKey={f.key} value={mohrDraft[f.key]} onChange={hm} hint={f.hint}/>)}
+          note={`${mohrList.length} reading${mohrList.length !== 1 ? "s" : ""} added`}
+        />
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "80px 80px 1fr",
+            gap: 12,
+            alignItems: "end",
+            marginBottom: 12,
+          }}
+        >
+          <Field
+            label="X (m)"
+            unit=""
+            fieldKey="measureX"
+            value={mohrDraft.measureX}
+            onChange={hm}
+            hint="5"
+          />
+          <Field
+            label="Y (m)"
+            unit=""
+            fieldKey="measureY"
+            value={mohrDraft.measureY}
+            onChange={hm}
+            hint="8"
+          />
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(5,1fr)",
+              gap: 12,
+            }}
+          >
+            {MOHR_FIELDS.map((f) => (
+              <Field
+                key={f.key}
+                label={f.label}
+                unit={f.unit}
+                fieldKey={f.key}
+                value={mohrDraft[f.key]}
+                onChange={hm}
+                hint={f.hint}
+              />
+            ))}
           </div>
         </div>
-        {fsNow&&fsNowC&&(
-          <div style={{display:"inline-flex",alignItems:"center",gap:8,marginBottom:12,
-            background:fsNowC.bg,border:`1px solid ${fsNowC.border}`,borderRadius:8,padding:"6px 14px"}}>
-            <div style={{width:8,height:8,borderRadius:"50%",background:fsNowC.dot}}/>
-            <span style={{fontSize:11,color:fsNowC.text,fontWeight:700,fontFamily:"monospace"}}>{fsNow}</span>
-            <span style={{fontSize:11,color:fsNowC.text}}>{fsNowC.label}</span>
+        {fsNow && fsNowC && (
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              marginBottom: 12,
+              background: fsNowC.bg,
+              border: `1px solid ${fsNowC.border}`,
+              borderRadius: 8,
+              padding: "6px 14px",
+            }}
+          >
+            <div
+              style={{
+                width: 8,
+                height: 8,
+                borderRadius: "50%",
+                background: fsNowC.dot,
+              }}
+            />
+            <span
+              style={{
+                fontSize: 11,
+                color: fsNowC.text,
+                fontWeight: 700,
+                fontFamily: "monospace",
+              }}
+            >
+              {fsNow}
+            </span>
+            <span style={{ fontSize: 11, color: fsNowC.text }}>
+              {fsNowC.label}
+            </span>
           </div>
         )}
-        <button onClick={addMohr} style={{...s.addBtn,maxWidth:300}}>
-          + Add Reading at ({mohrDraft.measureX||"?"}, {mohrDraft.measureY||"?"})
+        <button onClick={addMohr} style={{ ...s.addBtn, maxWidth: 300 }}>
+          + Add Reading at ({mohrDraft.measureX || "?"},{" "}
+          {mohrDraft.measureY || "?"})
         </button>
-        <MohrTable readings={mohrList} onRemove={removeMohr}/>
+        <MohrTable readings={mohrList} onRemove={removeMohr} />
       </Card>
 
       {/* Save site */}
-      <button onClick={addSite} disabled={!mohrList.length}
-        style={{...s.addBtn,marginBottom:16,opacity:mohrList.length?1:0.5,cursor:mohrList.length?"pointer":"not-allowed"}}>
-        ✓ Save Site {siteData.siteId} ({mohrList.length} reading{mohrList.length!==1?"s":""}) to Queue
+      <button
+        onClick={addSite}
+        disabled={!mohrList.length}
+        style={{
+          ...s.addBtn,
+          marginBottom: 16,
+          opacity: mohrList.length ? 1 : 0.5,
+          cursor: mohrList.length ? "pointer" : "not-allowed",
+        }}
+      >
+        ✓ Save Site {siteData.siteId} ({mohrList.length} reading
+        {mohrList.length !== 1 ? "s" : ""}) to Queue
       </button>
 
       {/* Queue preview */}
-      {sites.length>0&&(
-        <Card style={{marginBottom:16,padding:0,overflow:"hidden"}}>
-          <div style={{padding:"14px 20px",borderBottom:"1px solid #f1f5f9",background:"#f8fafc"}}>
-            <SectionHeader icon="📋" label="Push Queue" sub={`${sites.length} site${sites.length!==1?"s":""} ready to push`}/>
+      {sites.length > 0 && (
+        <Card style={{ marginBottom: 16, padding: 0, overflow: "hidden" }}>
+          <div
+            style={{
+              padding: "14px 20px",
+              borderBottom: "1px solid #f1f5f9",
+              background: "#f8fafc",
+            }}
+          >
+            <SectionHeader
+              icon="📋"
+              label="Push Queue"
+              sub={`${sites.length} site${sites.length !== 1 ? "s" : ""} ready to push`}
+            />
           </div>
-          <div style={{overflowX:"auto",padding:4}}>
+          <div style={{ overflowX: "auto", padding: 4 }}>
             <table style={s.table}>
-              <thead><tr>
-                {["Site ID","L×W","Pillars","Type","Soil","SPT","Df","GW","Load","Readings","Min FS","Max FS"].map(h=><th key={h} style={s.th}>{h}</th>)}
-              </tr></thead>
+              <thead>
+                <tr>
+                  {[
+                    "Site ID",
+                    "L×W",
+                    "Pillars",
+                    "Type",
+                    "Soil",
+                    "SPT",
+                    "Df",
+                    "GW",
+                    "Load",
+                    "Readings",
+                    "Min FS",
+                    "Max FS",
+                  ].map((h) => (
+                    <th key={h} style={s.th}>
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
               <tbody>
-                {sites.map((site,i)=>{
-                  const fsList=site.mohrReadings.map(r=>parseFloat(calcFs(r)||0)).filter(v=>v>0);
-                  const minFs=fsList.length?Math.min(...fsList).toFixed(2):"—";
-                  const maxFs=fsList.length?Math.max(...fsList).toFixed(2):"—";
-                  const minC=parseFloat(minFs)<1.2?"#dc2626":parseFloat(minFs)<2?"#d97706":"#16a34a";
-                  return(
-                    <tr key={i} style={{background:i%2===0?"#fff":"#f8fafc"}}>
-                      <td style={{...s.td,fontWeight:600}}>{site.siteId}</td>
-                      <td style={s.td}>{site.siteLength}×{site.siteWidth}</td>
+                {sites.map((site, i) => {
+                  const fsList = site.mohrReadings
+                    .map((r) => parseFloat(calcFs(r) || 0))
+                    .filter((v) => v > 0);
+                  const minFs = fsList.length
+                    ? Math.min(...fsList).toFixed(2)
+                    : "—";
+                  const maxFs = fsList.length
+                    ? Math.max(...fsList).toFixed(2)
+                    : "—";
+                  const minC =
+                    parseFloat(minFs) < 1.2
+                      ? "#dc2626"
+                      : parseFloat(minFs) < 2
+                        ? "#d97706"
+                        : "#16a34a";
+                  return (
+                    <tr
+                      key={i}
+                      style={{ background: i % 2 === 0 ? "#fff" : "#f8fafc" }}
+                    >
+                      <td style={{ ...s.td, fontWeight: 600 }}>
+                        {site.siteId}
+                      </td>
+                      <td style={s.td}>
+                        {site.siteLength}×{site.siteWidth}
+                      </td>
                       <td style={s.td}>{site.numPillars}</td>
                       <td style={s.td}>{site.buildingType}</td>
                       <td style={s.td}>{site.soilType}</td>
@@ -467,9 +696,19 @@ const DataCollector = () => {
                       <td style={s.td}>{site.foundationDepth}m</td>
                       <td style={s.td}>{site.groundwaterDepth}m</td>
                       <td style={s.td}>{site.appliedLoad}kN</td>
-                      <td style={{...s.td,fontWeight:600,color:"#3b82f6"}}>{site.mohrReadings.length}</td>
-                      <td style={{...s.td,fontWeight:700,color:minC}}>{minFs}</td>
-                      <td style={{...s.td,fontWeight:700,color:"#16a34a"}}>{maxFs}</td>
+                      <td
+                        style={{ ...s.td, fontWeight: 600, color: "#3b82f6" }}
+                      >
+                        {site.mohrReadings.length}
+                      </td>
+                      <td style={{ ...s.td, fontWeight: 700, color: minC }}>
+                        {minFs}
+                      </td>
+                      <td
+                        style={{ ...s.td, fontWeight: 700, color: "#16a34a" }}
+                      >
+                        {maxFs}
+                      </td>
                     </tr>
                   );
                 })}
@@ -480,18 +719,54 @@ const DataCollector = () => {
       )}
 
       {/* Push button */}
-      <button onClick={pushToBackend} disabled={pushing||!sites.length}
-        style={{...s.pushBtn,opacity:pushing||!sites.length?0.5:1,cursor:pushing||!sites.length?"not-allowed":"pointer"}}>
-        {pushing?"⟳ Pushing to database...": `🚀 Push ${sites.length} Site${sites.length!==1?"s":""} to Database`}
+      <button
+        onClick={pushToBackend}
+        disabled={pushing || !sites.length}
+        style={{
+          ...s.pushBtn,
+          opacity: pushing || !sites.length ? 0.5 : 1,
+          cursor: pushing || !sites.length ? "not-allowed" : "pointer",
+        }}
+      >
+        {pushing
+          ? "⟳ Pushing to database..."
+          : `🚀 Push ${sites.length} Site${sites.length !== 1 ? "s" : ""} to Database`}
       </button>
 
-      {pushing&&<>
-        <div style={{marginTop:10,borderRadius:6,overflow:"hidden",height:4,background:"#e2e8f0"}}>
-          <div style={{height:"100%",background:"linear-gradient(90deg,#2563eb,#60a5fa,#2563eb)",backgroundSize:"200% 100%",animation:"slide 1.2s linear infinite"}}/>
-          <style>{`@keyframes slide{0%{background-position:200% 0}100%{background-position:-200% 0}}`}</style>
-        </div>
-        <p style={{textAlign:"center",fontSize:11,color:"#64748b",marginTop:6}}>⏳ Calculating FS · Bearing capacity · SSR · AI analysis · Saving to PostgreSQL…</p>
-      </>}
+      {pushing && (
+        <>
+          <div
+            style={{
+              marginTop: 10,
+              borderRadius: 6,
+              overflow: "hidden",
+              height: 4,
+              background: "#e2e8f0",
+            }}
+          >
+            <div
+              style={{
+                height: "100%",
+                background: "linear-gradient(90deg,#2563eb,#60a5fa,#2563eb)",
+                backgroundSize: "200% 100%",
+                animation: "slide 1.2s linear infinite",
+              }}
+            />
+            <style>{`@keyframes slide{0%{background-position:200% 0}100%{background-position:-200% 0}}`}</style>
+          </div>
+          <p
+            style={{
+              textAlign: "center",
+              fontSize: 11,
+              color: "#64748b",
+              marginTop: 6,
+            }}
+          >
+            ⏳ Calculating FS · Bearing capacity · SSR · AI analysis · Saving to
+            PostgreSQL…
+          </p>
+        </>
+      )}
 
       {/* DB records history */}
       <RecordsHistory
@@ -501,8 +776,22 @@ const DataCollector = () => {
         onDelete={deleteSite}
       />
 
-      <button onClick={()=>window.location.href="/"} style={{width:"100%",marginTop:16,padding:12,background:"transparent",
-        border:"1px solid #cbd5e1",borderRadius:10,color:"#64748b",fontWeight:600,fontSize:13,cursor:"pointer",marginBottom:40}}>
+      <button
+        onClick={() => (window.location.href = "/")}
+        style={{
+          width: "100%",
+          marginTop: 16,
+          padding: 12,
+          background: "transparent",
+          border: "1px solid #cbd5e1",
+          borderRadius: 10,
+          color: "#64748b",
+          fontWeight: 600,
+          fontSize: 13,
+          cursor: "pointer",
+          marginBottom: 40,
+        }}
+      >
         📊 Go to Dashboard
       </button>
     </div>
