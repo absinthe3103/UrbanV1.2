@@ -484,7 +484,7 @@ function CsvPanel({ onImport, fsNow, fsNowC, mohrDraft }) {
       if (result.length) {
         onImport(result);
         alert(
-          `✅ Imported ${result.length} site${result.length !== 1 ? "s" : ""}`,
+          `Imported ${result.length} site${result.length !== 1 ? "s" : ""}`,
         );
       } else
         alert(
@@ -962,14 +962,14 @@ const DataCollector = () => {
       });
       if (res.ok) {
         const d = await res.json();
-        alert(`✅ Pushed ${d.processed_count} site(s) to database!`);
+        alert(`Pushed ${d.processed_count} site(s) to database!`);
         setSites([]);
         await loadRecords();
       } else {
-        alert("❌ Server error.");
+        alert("Server error.");
       }
     } catch (err) {
-      alert(`❌ Backend not found.\n${err.message}`);
+      alert(`Backend not found.\n${err.message}`);
     } finally {
       setPushing(false);
     }
@@ -991,10 +991,10 @@ const DataCollector = () => {
         setRecords((prev) => prev.filter((r) => r.id !== dbId));
       } else {
         const body = await res.json().catch(() => ({}));
-        alert(`❌ Delete failed: ${body.detail || res.statusText}`);
+        alert(`Delete failed: ${body.detail || res.statusText}`);
       }
     } catch (e) {
-      alert(`❌ Cannot reach backend.\n${e.message}`);
+      alert(`Cannot reach backend.\n${e.message}`);
     }
   };
 
