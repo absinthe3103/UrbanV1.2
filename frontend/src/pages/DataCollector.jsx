@@ -120,7 +120,6 @@ function ssrColour(c) {
   return { hex: "#ef4444", bg: "#fee2e2", text: "#991b1b" };
 }
 
-// ── CSV parser (SITE/MOHR row format) ─────────────────────────────────────────
 function parseCSV(text) {
   const lines = text
     .split("\n")
@@ -224,6 +223,7 @@ function SectionHeader({ icon, label, sub, note }) {
     </div>
   );
 }
+
 function Field({
   label,
   unit,
@@ -263,6 +263,7 @@ function Field({
     </div>
   );
 }
+
 function SelectF({ label, fieldKey, value, onChange, options }) {
   return (
     <div style={s.ig}>
@@ -283,42 +284,81 @@ function SelectF({ label, fieldKey, value, onChange, options }) {
     </div>
   );
 }
+
 function Card({ children, style }) {
   return <div style={{ ...s.card, ...style }}>{children}</div>;
 }
 
-function MohrTable({ readings, onRemove }) {
-  if (!readings.length) return null;
+// ── Rounded Table Wrapper ─────────────────────────────────────────────────────
+function TableWrap({ children, minWidth }) {
   return (
     <div
       style={{
-        marginTop: 16,
-        borderRadius: 8,
+        borderRadius: 10,
         overflow: "hidden",
         border: "1px solid #e2e8f0",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
       }}
     >
-      <table
-        style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}
-      >
+      <div style={{ overflowX: "auto" }}>
+        <table
+          style={{
+            width: "100%",
+            borderCollapse: "separate",
+            borderSpacing: 0,
+            fontSize: 11,
+            minWidth: minWidth || "auto",
+          }}
+        >
+          {children}
+        </table>
+      </div>
+    </div>
+  );
+}
+
+// Shared th style with rounded first/last corners
+function Th({ children, first, last }) {
+  return (
+    <th
+      style={{
+        ...s.th,
+        background: "#f1f5f9",
+        textAlign: "center",
+        borderTopLeftRadius: first ? "10px" : 0,
+        borderTopRightRadius: last ? "10px" : 0,
+      }}
+    >
+      {children}
+    </th>
+  );
+}
+
+// ── Mohr Table ────────────────────────────────────────────────────────────────
+function MohrTable({ readings, onRemove }) {
+  if (!readings.length) return null;
+  const headers = [
+    "#",
+    "X (m)",
+    "Y (m)",
+    "c' (kPa)",
+    "σ' (kPa)",
+    "φ' (°)",
+    "τ (kPa)",
+    "u (kPa)",
+    "FS",
+    "Status",
+    "Action",
+  ];
+  return (
+    <div style={{ marginTop: 16 }}>
+      <TableWrap>
         <thead>
-          <tr style={{ background: "#f8fafc" }}>
-            {[
-              "#",
-              "X (m)",
-              "Y (m)",
-              "c' (kPa)",
-              "σ' (kPa)",
-              "φ' (°)",
-              "τ (kPa)",
-              "u (kPa)",
-              "FS",
-              "Status",
-              "Action",
-            ].map((h) => (
-              <th key={h} style={{ ...s.th, textAlign: "center" }}>
+          <tr>
+            {headers.map((h, i) => (
+              <Th key={h} first={i === 0} last={i === headers.length - 1}>
                 {h}
-              </th>
+              </Th>
             ))}
           </tr>
         </thead>
@@ -326,40 +366,69 @@ function MohrTable({ readings, onRemove }) {
           {readings.map((r, i) => {
             const fs = calcFs(r);
             const fc = fs ? fsColour(fs) : null;
+            const isLast = i === readings.length - 1;
             return (
               <tr
                 key={i}
                 style={{ background: i % 2 === 0 ? "#fff" : "#f8fafc" }}
               >
-                <td style={{ ...s.td, textAlign: "center", color: "#94a3b8" }}>
+                <td
+                  style={{
+                    ...s.td,
+                    color: "#94a3b8",
+                    borderBottom: isLast ? "none" : undefined,
+                  }}
+                >
                   {i + 1}
                 </td>
-                <td style={{ ...s.td, textAlign: "center" }}>{r.measureX}</td>
-                <td style={{ ...s.td, textAlign: "center" }}>{r.measureY}</td>
-                <td style={{ ...s.td, textAlign: "center" }}>{r.cohesion}</td>
-                <td style={{ ...s.td, textAlign: "center" }}>
+                <td
+                  style={{ ...s.td, borderBottom: isLast ? "none" : undefined }}
+                >
+                  {r.measureX}
+                </td>
+                <td
+                  style={{ ...s.td, borderBottom: isLast ? "none" : undefined }}
+                >
+                  {r.measureY}
+                </td>
+                <td
+                  style={{ ...s.td, borderBottom: isLast ? "none" : undefined }}
+                >
+                  {r.cohesion}
+                </td>
+                <td
+                  style={{ ...s.td, borderBottom: isLast ? "none" : undefined }}
+                >
                   {r.normalStress}
                 </td>
-                <td style={{ ...s.td, textAlign: "center" }}>
+                <td
+                  style={{ ...s.td, borderBottom: isLast ? "none" : undefined }}
+                >
                   {r.frictionAngle}°
                 </td>
-                <td style={{ ...s.td, textAlign: "center" }}>
+                <td
+                  style={{ ...s.td, borderBottom: isLast ? "none" : undefined }}
+                >
                   {r.shearStress}
                 </td>
-                <td style={{ ...s.td, textAlign: "center" }}>
+                <td
+                  style={{ ...s.td, borderBottom: isLast ? "none" : undefined }}
+                >
                   {r.porePressure || 0}
                 </td>
                 <td
                   style={{
                     ...s.td,
-                    textAlign: "center",
                     fontWeight: 700,
                     color: fc ? fc.dot : "#9ca3af",
+                    borderBottom: isLast ? "none" : undefined,
                   }}
                 >
                   {fs || "—"}
                 </td>
-                <td style={{ ...s.td, textAlign: "center" }}>
+                <td
+                  style={{ ...s.td, borderBottom: isLast ? "none" : undefined }}
+                >
                   {fc && (
                     <span
                       style={{
@@ -376,7 +445,9 @@ function MohrTable({ readings, onRemove }) {
                     </span>
                   )}
                 </td>
-                <td style={{ ...s.td, textAlign: "center" }}>
+                <td
+                  style={{ ...s.td, borderBottom: isLast ? "none" : undefined }}
+                >
                   <button
                     onClick={() => onRemove(i)}
                     style={{
@@ -397,12 +468,12 @@ function MohrTable({ readings, onRemove }) {
             );
           })}
         </tbody>
-      </table>
+      </TableWrap>
     </div>
   );
 }
 
-// ── CSV import panel — left: file picker, right: live FS preview ──────────────
+// ── CSV Panel ─────────────────────────────────────────────────────────────────
 function CsvPanel({ onImport, fsNow, fsNowC, mohrDraft }) {
   const handleFile = (e) => {
     const file = e.target.files[0];
@@ -431,7 +502,6 @@ function CsvPanel({ onImport, fsNow, fsNowC, mohrDraft }) {
         sub="One file, one or more sites"
       />
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-        {/* File picker */}
         <div
           style={{
             background: "#f8fafc",
@@ -485,8 +555,6 @@ function CsvPanel({ onImport, fsNow, fsNowC, mohrDraft }) {
             </div>
           </label>
         </div>
-
-        {/* Live FS preview */}
         <div
           style={{
             display: "flex",
@@ -593,7 +661,7 @@ function CsvPanel({ onImport, fsNow, fsNowC, mohrDraft }) {
   );
 }
 
-// ── Records history table (loaded from DB) ─────────────────────────────────
+// ── Records History ───────────────────────────────────────────────────────────
 function RecordsHistory({ records, loading, onViewDashboard, onDelete }) {
   if (loading)
     return (
@@ -620,16 +688,28 @@ function RecordsHistory({ records, loading, onViewDashboard, onDelete }) {
         />
       </Card>
     );
+  const headers = [
+    "ID",
+    "Site ID",
+    "Saved At",
+    "L×W",
+    "Pillars",
+    "Type",
+    "Soil",
+    "Avg FS",
+    "SSR",
+    "Certification",
+    "Readings",
+    "Actions",
+  ];
   return (
-    <Card style={{ marginTop: 24, padding: 0, overflow: "hidden" }}>
+    <Card style={{ marginTop: 24 }}>
       <div
         style={{
-          padding: "14px 20px",
-          borderBottom: "1px solid #f1f5f9",
-          background: "#f8fafc",
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
+          marginBottom: 16,
         }}
       >
         <SectionHeader
@@ -641,128 +721,175 @@ function RecordsHistory({ records, loading, onViewDashboard, onDelete }) {
           PostgreSQL · persisted
         </span>
       </div>
-      <div style={{ overflowX: "auto" }}>
-        <table style={{ ...s.table, minWidth: 900 }}>
-          <thead>
-            <tr>
-              {[
-                "ID",
-                "Site ID",
-                "Saved At",
-                "L×W",
-                "Pillars",
-                "Type",
-                "Soil",
-                "Avg FS",
-                "SSR",
-                "Certification",
-                "Readings",
-                "Actions",
-              ].map((h) => (
-                <th key={h} style={s.th}>
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {records.map((r, i) => {
-              const sc = ssrColour(r.ssr_colour || "red");
-              const avgFs = parseFloat(r.avg_fs || 0);
-              const fsC =
-                avgFs >= 2 ? "#16a34a" : avgFs >= 1.2 ? "#d97706" : "#dc2626";
-              const dt = r.createdAt
-                ? new Date(r.createdAt).toLocaleString()
-                : "—";
-              return (
-                <tr
-                  key={r.id}
-                  style={{ background: i % 2 === 0 ? "#fff" : "#f8fafc" }}
+      <TableWrap minWidth={900}>
+        <thead>
+          <tr>
+            {headers.map((h, i) => (
+              <Th key={h} first={i === 0} last={i === headers.length - 1}>
+                {h}
+              </Th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {records.map((r, i) => {
+            const sc = ssrColour(r.ssr_colour || "red");
+            const avgFs = parseFloat(r.avg_fs || 0);
+            const fsC =
+              avgFs >= 2 ? "#16a34a" : avgFs >= 1.2 ? "#d97706" : "#dc2626";
+            const dt = r.createdAt
+              ? new Date(r.createdAt).toLocaleString()
+              : "—";
+            const isLast = i === records.length - 1;
+            return (
+              <tr
+                key={r.id}
+                style={{ background: i % 2 === 0 ? "#fff" : "#f8fafc" }}
+              >
+                <td
+                  style={{
+                    ...s.td,
+                    color: "#94a3b8",
+                    fontSize: 10,
+                    borderBottom: isLast ? "none" : undefined,
+                  }}
                 >
-                  <td style={{ ...s.td, color: "#94a3b8", fontSize: 10 }}>
-                    {r.id}
-                  </td>
-                  <td style={{ ...s.td, fontWeight: 600 }}>{r.siteId}</td>
-                  <td
+                  {r.id}
+                </td>
+                <td
+                  style={{
+                    ...s.td,
+                    fontWeight: 600,
+                    borderBottom: isLast ? "none" : undefined,
+                  }}
+                >
+                  {r.siteId}
+                </td>
+                <td
+                  style={{
+                    ...s.td,
+                    fontSize: 10,
+                    color: "#64748b",
+                    whiteSpace: "nowrap",
+                    borderBottom: isLast ? "none" : undefined,
+                  }}
+                >
+                  {dt}
+                </td>
+                <td
+                  style={{ ...s.td, borderBottom: isLast ? "none" : undefined }}
+                >
+                  {r.siteLength}×{r.siteWidth}
+                </td>
+                <td
+                  style={{ ...s.td, borderBottom: isLast ? "none" : undefined }}
+                >
+                  {r.numPillars}
+                </td>
+                <td
+                  style={{ ...s.td, borderBottom: isLast ? "none" : undefined }}
+                >
+                  {r.buildingType}
+                </td>
+                <td
+                  style={{ ...s.td, borderBottom: isLast ? "none" : undefined }}
+                >
+                  {r.soilType}
+                </td>
+                <td
+                  style={{
+                    ...s.td,
+                    fontWeight: 700,
+                    color: fsC,
+                    borderBottom: isLast ? "none" : undefined,
+                  }}
+                >
+                  {r.avg_fs}
+                </td>
+                <td
+                  style={{
+                    ...s.td,
+                    fontWeight: 700,
+                    color: sc.hex,
+                    borderBottom: isLast ? "none" : undefined,
+                  }}
+                >
+                  {r.ssr_score}
+                </td>
+                <td
+                  style={{ ...s.td, borderBottom: isLast ? "none" : undefined }}
+                >
+                  <span
                     style={{
-                      ...s.td,
+                      padding: "2px 8px",
+                      borderRadius: 8,
                       fontSize: 10,
-                      color: "#64748b",
-                      whiteSpace: "nowrap",
+                      fontWeight: 700,
+                      background: sc.bg,
+                      color: sc.text,
                     }}
                   >
-                    {dt}
-                  </td>
-                  <td style={s.td}>
-                    {r.siteLength}×{r.siteWidth}
-                  </td>
-                  <td style={s.td}>{r.numPillars}</td>
-                  <td style={s.td}>{r.buildingType}</td>
-                  <td style={s.td}>{r.soilType}</td>
-                  <td style={{ ...s.td, fontWeight: 700, color: fsC }}>
-                    {r.avg_fs}
-                  </td>
-                  <td style={{ ...s.td, fontWeight: 700, color: sc.hex }}>
-                    {r.ssr_score}
-                  </td>
-                  <td style={s.td}>
-                    <span
+                    {r.certification}
+                  </span>
+                </td>
+                <td
+                  style={{
+                    ...s.td,
+                    color: "#3b82f6",
+                    fontWeight: 600,
+                    borderBottom: isLast ? "none" : undefined,
+                  }}
+                >
+                  {(r.mohrReadings || []).length}
+                </td>
+                <td
+                  style={{ ...s.td, borderBottom: isLast ? "none" : undefined }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: 6,
+                      justifyContent: "center",
+                    }}
+                  >
+                    <button
+                      onClick={() => onViewDashboard(r.id)}
                       style={{
-                        padding: "2px 8px",
-                        borderRadius: 8,
+                        padding: "4px 10px",
+                        borderRadius: 5,
+                        border: "1px solid #3b82f6",
+                        background: "#eff6ff",
+                        color: "#1d4ed8",
                         fontSize: 10,
-                        fontWeight: 700,
-                        background: sc.bg,
-                        color: sc.text,
+                        cursor: "pointer",
+                        fontWeight: 600,
+                        whiteSpace: "nowrap",
                       }}
                     >
-                      {r.certification}
-                    </span>
-                  </td>
-                  <td style={{ ...s.td, color: "#3b82f6", fontWeight: 600 }}>
-                    {(r.mohrReadings || []).length}
-                  </td>
-                  <td style={s.td}>
-                    <div style={{ display: "flex", gap: 6 }}>
-                      <button
-                        onClick={() => onViewDashboard(r.id)}
-                        style={{
-                          padding: "4px 10px",
-                          borderRadius: 5,
-                          border: "1px solid #3b82f6",
-                          background: "#eff6ff",
-                          color: "#1d4ed8",
-                          fontSize: 10,
-                          cursor: "pointer",
-                          fontWeight: 600,
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        📊 View
-                      </button>
-                      <button
-                        onClick={() => onDelete(r.id, r.siteId)}
-                        style={{
-                          padding: "4px 10px",
-                          borderRadius: 5,
-                          border: "1px solid #fca5a5",
-                          background: "#fff5f5",
-                          color: "#dc2626",
-                          fontSize: 10,
-                          cursor: "pointer",
-                          fontWeight: 600,
-                        }}
-                      >
-                        🗑 Remove
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+                      📊 View
+                    </button>
+                    <button
+                      onClick={() => onDelete(r.id, r.siteId)}
+                      style={{
+                        padding: "4px 10px",
+                        borderRadius: 5,
+                        border: "1px solid #fca5a5",
+                        background: "#fff5f5",
+                        color: "#dc2626",
+                        fontSize: 10,
+                        cursor: "pointer",
+                        fontWeight: 600,
+                      }}
+                    >
+                      🗑 Remove
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </TableWrap>
     </Card>
   );
 }
@@ -780,7 +907,6 @@ const DataCollector = () => {
   const hs = (k, v) => setSiteData((p) => ({ ...p, [k]: v }));
   const hm = (k, v) => setMohrDraft((p) => ({ ...p, [k]: v }));
 
-  // Load saved records from DB on mount
   const loadRecords = async () => {
     setRecLoading(true);
     try {
@@ -838,7 +964,7 @@ const DataCollector = () => {
         const d = await res.json();
         alert(`✅ Pushed ${d.processed_count} site(s) to database!`);
         setSites([]);
-        await loadRecords(); // refresh history table
+        await loadRecords();
       } else {
         alert("❌ Server error.");
       }
@@ -850,7 +976,6 @@ const DataCollector = () => {
   };
 
   const viewDashboard = (dbId) => {
-    // Navigate to visualizer with this site pre-selected
     window.location.href = `/?siteId=${dbId}`;
   };
 
@@ -863,16 +988,13 @@ const DataCollector = () => {
         headers: { "Content-Type": "application/json" },
       });
       if (res.ok) {
-        // Remove from local state immediately — no need to wait for full reload
         setRecords((prev) => prev.filter((r) => r.id !== dbId));
       } else {
         const body = await res.json().catch(() => ({}));
         alert(`❌ Delete failed: ${body.detail || res.statusText}`);
       }
     } catch (e) {
-      alert(
-        `❌ Cannot reach backend.\nMake sure the server is running on port 8000.\n\n${e.message}`,
-      );
+      alert(`❌ Cannot reach backend.\n${e.message}`);
     }
   };
 
@@ -881,6 +1003,21 @@ const DataCollector = () => {
   const crit = sites.filter(
     (r) => parseFloat(calcFs(r.mohrReadings?.[0] || {}) || 0) < 1.2,
   ).length;
+
+  const queueHeaders = [
+    "Site ID",
+    "L×W",
+    "Pillars",
+    "Type",
+    "Soil",
+    "SPT",
+    "Df",
+    "GW",
+    "Load",
+    "Readings",
+    "Min FS",
+    "Max FS",
+  ];
 
   return (
     <div style={s.page}>
@@ -928,7 +1065,7 @@ const DataCollector = () => {
         )}
       </div>
 
-      {/* CSV import + live FS preview */}
+      {/* CSV + FS Preview */}
       <CsvPanel
         onImport={importSites}
         fsNow={fsNow}
@@ -1076,7 +1213,6 @@ const DataCollector = () => {
             ))}
           </div>
         </div>
-
         <button onClick={addMohr} style={{ ...s.addBtn, maxWidth: 340 }}>
           ＋ Record Measurement at X:{mohrDraft.measureX || "?"} Y:
           {mohrDraft.measureY || "?"}
@@ -1095,104 +1231,163 @@ const DataCollector = () => {
           cursor: mohrList.length ? "pointer" : "not-allowed",
         }}
       >
-        ✓ Add Site {siteData.siteId} ({mohrList.length} measurements
+        ✓ Add Site {siteData.siteId} ({mohrList.length} measurement
         {mohrList.length !== 1 ? "s" : ""}) to Queue
       </button>
 
       {/* Queue preview */}
       {sites.length > 0 && (
-        <Card style={{ marginBottom: 16, padding: 0, overflow: "hidden" }}>
-          <div
-            style={{
-              padding: "14px 20px",
-              borderBottom: "1px solid #f1f5f9",
-              background: "#f8fafc",
-            }}
-          >
-            <SectionHeader
-              icon="📋"
-              label="Push Queue"
-              sub={`${sites.length} site${sites.length !== 1 ? "s" : ""} ready to push`}
-            />
-          </div>
-          <div style={{ overflowX: "auto", padding: 4 }}>
-            <table style={s.table}>
-              <thead>
-                <tr>
-                  {[
-                    "Site ID",
-                    "L×W",
-                    "Pillars",
-                    "Type",
-                    "Soil",
-                    "SPT",
-                    "Df",
-                    "GW",
-                    "Load",
-                    "Readings",
-                    "Min FS",
-                    "Max FS",
-                  ].map((h) => (
-                    <th key={h} style={s.th}>
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {sites.map((site, i) => {
-                  const fsList = site.mohrReadings
-                    .map((r) => parseFloat(calcFs(r) || 0))
-                    .filter((v) => v > 0);
-                  const minFs = fsList.length
-                    ? Math.min(...fsList).toFixed(2)
-                    : "—";
-                  const maxFs = fsList.length
-                    ? Math.max(...fsList).toFixed(2)
-                    : "—";
-                  const minC =
-                    parseFloat(minFs) < 1.2
-                      ? "#dc2626"
-                      : parseFloat(minFs) < 2
-                        ? "#d97706"
-                        : "#16a34a";
-                  return (
-                    <tr
-                      key={i}
-                      style={{ background: i % 2 === 0 ? "#fff" : "#f8fafc" }}
+        <Card style={{ marginBottom: 16 }}>
+          <SectionHeader
+            icon="📋"
+            label="Push Queue"
+            sub={`${sites.length} site${sites.length !== 1 ? "s" : ""} ready to push`}
+          />
+          <TableWrap>
+            <thead>
+              <tr>
+                {queueHeaders.map((h, i) => (
+                  <Th
+                    key={h}
+                    first={i === 0}
+                    last={i === queueHeaders.length - 1}
+                  >
+                    {h}
+                  </Th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {sites.map((site, i) => {
+                const fsList = site.mohrReadings
+                  .map((r) => parseFloat(calcFs(r) || 0))
+                  .filter((v) => v > 0);
+                const minFs = fsList.length
+                  ? Math.min(...fsList).toFixed(2)
+                  : "—";
+                const maxFs = fsList.length
+                  ? Math.max(...fsList).toFixed(2)
+                  : "—";
+                const minC =
+                  parseFloat(minFs) < 1.2
+                    ? "#dc2626"
+                    : parseFloat(minFs) < 2
+                      ? "#d97706"
+                      : "#16a34a";
+                const isLast = i === sites.length - 1;
+                return (
+                  <tr
+                    key={i}
+                    style={{ background: i % 2 === 0 ? "#fff" : "#f8fafc" }}
+                  >
+                    <td
+                      style={{
+                        ...s.td,
+                        fontWeight: 600,
+                        borderBottom: isLast ? "none" : undefined,
+                      }}
                     >
-                      <td style={{ ...s.td, fontWeight: 600 }}>
-                        {site.siteId}
-                      </td>
-                      <td style={s.td}>
-                        {site.siteLength}×{site.siteWidth}
-                      </td>
-                      <td style={s.td}>{site.numPillars}</td>
-                      <td style={s.td}>{site.buildingType}</td>
-                      <td style={s.td}>{site.soilType}</td>
-                      <td style={s.td}>{site.sptN}</td>
-                      <td style={s.td}>{site.foundationDepth}m</td>
-                      <td style={s.td}>{site.groundwaterDepth}m</td>
-                      <td style={s.td}>{site.appliedLoad}kN</td>
-                      <td
-                        style={{ ...s.td, fontWeight: 600, color: "#3b82f6" }}
-                      >
-                        {site.mohrReadings.length}
-                      </td>
-                      <td style={{ ...s.td, fontWeight: 700, color: minC }}>
-                        {minFs}
-                      </td>
-                      <td
-                        style={{ ...s.td, fontWeight: 700, color: "#16a34a" }}
-                      >
-                        {maxFs}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                      {site.siteId}
+                    </td>
+                    <td
+                      style={{
+                        ...s.td,
+                        borderBottom: isLast ? "none" : undefined,
+                      }}
+                    >
+                      {site.siteLength}×{site.siteWidth}
+                    </td>
+                    <td
+                      style={{
+                        ...s.td,
+                        borderBottom: isLast ? "none" : undefined,
+                      }}
+                    >
+                      {site.numPillars}
+                    </td>
+                    <td
+                      style={{
+                        ...s.td,
+                        borderBottom: isLast ? "none" : undefined,
+                      }}
+                    >
+                      {site.buildingType}
+                    </td>
+                    <td
+                      style={{
+                        ...s.td,
+                        borderBottom: isLast ? "none" : undefined,
+                      }}
+                    >
+                      {site.soilType}
+                    </td>
+                    <td
+                      style={{
+                        ...s.td,
+                        borderBottom: isLast ? "none" : undefined,
+                      }}
+                    >
+                      {site.sptN}
+                    </td>
+                    <td
+                      style={{
+                        ...s.td,
+                        borderBottom: isLast ? "none" : undefined,
+                      }}
+                    >
+                      {site.foundationDepth}m
+                    </td>
+                    <td
+                      style={{
+                        ...s.td,
+                        borderBottom: isLast ? "none" : undefined,
+                      }}
+                    >
+                      {site.groundwaterDepth}m
+                    </td>
+                    <td
+                      style={{
+                        ...s.td,
+                        borderBottom: isLast ? "none" : undefined,
+                      }}
+                    >
+                      {site.appliedLoad}kN
+                    </td>
+                    <td
+                      style={{
+                        ...s.td,
+                        fontWeight: 600,
+                        color: "#3b82f6",
+                        borderBottom: isLast ? "none" : undefined,
+                      }}
+                    >
+                      {site.mohrReadings.length}
+                    </td>
+                    <td
+                      style={{
+                        ...s.td,
+                        fontWeight: 700,
+                        color: minC,
+                        borderBottom: isLast ? "none" : undefined,
+                      }}
+                    >
+                      {minFs}
+                    </td>
+                    <td
+                      style={{
+                        ...s.td,
+                        fontWeight: 700,
+                        color: "#16a34a",
+                        borderBottom: isLast ? "none" : undefined,
+                      }}
+                    >
+                      {maxFs}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </TableWrap>
         </Card>
       )}
 
@@ -1345,10 +1540,15 @@ const s = {
     cursor: "pointer",
     boxShadow: "0 2px 8px rgba(59,130,246,0.3)",
   },
-  table: { width: "100%", borderCollapse: "collapse", textAlign: "left" },
+  table: {
+    width: "100%",
+    borderCollapse: "separate",
+    borderSpacing: 0,
+    textAlign: "left",
+  },
   th: {
-    padding: "10px 8px",
-    background: "#f8fafc",
+    padding: "10px 12px",
+    background: "#f1f5f9",
     color: "#64748b",
     fontSize: 9,
     textTransform: "uppercase",
@@ -1357,11 +1557,12 @@ const s = {
     borderBottom: "2px solid #e2e8f0",
   },
   td: {
-    padding: "8px 8px",
+    padding: "8px 12px",
     borderBottom: "1px solid #f1f5f9",
     fontSize: 11,
     color: "#374151",
     whiteSpace: "nowrap",
+    textAlign: "center",
   },
   pushBtn: {
     width: "100%",

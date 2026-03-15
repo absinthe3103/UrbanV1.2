@@ -19,17 +19,34 @@ const NavLink = ({ to, children }) => {
       to={to}
       style={{
         textDecoration: "none",
-        padding: "6px 16px",
-        borderRadius: 6,
+        padding: "8px 20px",
+        borderRadius: 8,
         fontSize: 13,
         fontWeight: 600,
-        letterSpacing: "0.03em",
-        color: isActive ? "#ffffff" : "#94a3b8",
-        background: isActive ? "rgba(59,130,246,0.2)" : "transparent",
+        letterSpacing: "0.04em",
+        color: isActive ? "#ffffff" : "#cbd5e1",
+        background: isActive
+          ? "linear-gradient(135deg, rgba(37,99,235,0.5), rgba(59,130,246,0.3))"
+          : "transparent",
         border: isActive
-          ? "1px solid rgba(59,130,246,0.4)"
+          ? "1px solid rgba(96,165,250,0.5)"
           : "1px solid transparent",
-        transition: "all 0.15s",
+        transition: "all 0.2s",
+        display: "flex",
+        alignItems: "center",
+        gap: 6,
+      }}
+      onMouseEnter={(e) => {
+        if (!isActive) {
+          e.currentTarget.style.color = "#ffffff";
+          e.currentTarget.style.background = "rgba(255,255,255,0.08)";
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!isActive) {
+          e.currentTarget.style.color = "#cbd5e1";
+          e.currentTarget.style.background = "transparent";
+        }
       }}
     >
       {children}
@@ -50,45 +67,38 @@ function App() {
         {/* ── Nav ── */}
         <nav
           style={{
-            padding: "16px 40px",
+            padding: "0 40px",
+            height: 60,
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
             background: "#0d1f3c",
-            borderBottom: "1px solid #2563eb",
+            borderBottom: "1px solid rgba(37,99,235,0.4)",
             position: "sticky",
             top: 0,
             zIndex: 200,
+            boxShadow: "0 2px 12px rgba(0,0,0,0.3)",
           }}
         >
           {/* Logo */}
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ fontSize: 18 }}>🏗️</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <div>
               <div
                 style={{
-                  fontSize: 13,
+                  fontSize: 14,
                   fontWeight: 700,
                   color: "#f1f5f9",
                   letterSpacing: "0.04em",
+                  lineHeight: 1.2,
                 }}
               >
                 Urban Foundation Guardian
-              </div>
-              <div
-                style={{
-                  fontSize: 9,
-                  color: "#a2a4a8",
-                  letterSpacing: "0.1em",
-                }}
-              >
-                城市地基守护者
               </div>
             </div>
           </div>
 
           {/* Nav links */}
-          <div style={{ display: "flex", gap: 6 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
             <NavLink to="/">📊 Dashboard</NavLink>
             <NavLink to="/collect">📝 Data Entry</NavLink>
           </div>
