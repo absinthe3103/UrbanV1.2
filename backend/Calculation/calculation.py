@@ -63,12 +63,12 @@ def calculate_bearing_capacity(row):
     qa = qu / 3.0
 
     return {
-        "ultimate_bc":   round(qu, 2),
-        "allowable_bc":  round(qa, 2),
-        "Nc":            round(Nc, 3),
-        "Nq":            round(Nq, 3),
-        "Ngamma":        round(Ng, 3),
-        "local_shear":   local_shear,
+        "ultimate_bc":  round(qu, 2),
+        "allowable_bc": round(qa, 2),
+        "Nc":           round(Nc, 3),
+        "Nq":           round(Nq, 3),
+        "Ngamma":       round(Ng, 3),
+        "local_shear":  local_shear,
     }
 
 
@@ -84,9 +84,9 @@ def calculate_ssr(fs: float, qa: float, applied_load: float, spt_n: float) -> di
       20% → SPT N score   : N<=5=0, N>=30=20 pts, linear between
 
     Certification bands:
-      80-100 → CERTIFIED STABLE   (green)
-      50-79  → CONDITIONAL        (amber)
-      0-49   → HAZARD WARNING     (red)
+      90-100 → CERTIFIED STABLE   (green)
+      65-89  → CONDITIONAL        (amber)
+      0-64   → HAZARD WARNING     (red)
     """
     # FS component (0–40)
     fs_clamped = max(1.0, min(fs, 2.5))
@@ -105,11 +105,11 @@ def calculate_ssr(fs: float, qa: float, applied_load: float, spt_n: float) -> di
 
     total = round(fs_score + bc_score + spt_score, 1)
 
-    if total >= 80:
+    if total >= 90:
         cert   = "CERTIFIED STABLE"
         level  = "Low"
         colour = "green"
-    elif total >= 50:
+    elif total >= 65:
         cert   = "CONDITIONAL"
         level  = "Moderate"
         colour = "orange"
@@ -119,11 +119,11 @@ def calculate_ssr(fs: float, qa: float, applied_load: float, spt_n: float) -> di
         colour = "red"
 
     return {
-        "ssr_score":      total,
-        "certification":  cert,
-        "risk_level":     level,
-        "colour":         colour,
-        "fs_score":       round(fs_score, 1),
-        "bc_score":       round(bc_score, 1),
-        "spt_score":      round(spt_score, 1),
+        "ssr_score":     total,
+        "certification": cert,
+        "risk_level":    level,
+        "colour":        colour,
+        "fs_score":      round(fs_score, 1),
+        "bc_score":      round(bc_score, 1),
+        "spt_score":     round(spt_score, 1),
     }

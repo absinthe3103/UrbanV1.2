@@ -85,11 +85,11 @@ function App() {
             <div>
               <div
                 style={{
-                  fontSize: 14,
+                  fontSize: 11,
                   fontWeight: 700,
-                  color: "#f1f5f9",
-                  letterSpacing: "0.04em",
-                  lineHeight: 1.2,
+                  color: "#fff",
+                  letterSpacing: "0.2em",
+                  textTransform: "uppercase",
                 }}
               >
                 Urban Foundation Guardian
