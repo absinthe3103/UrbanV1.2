@@ -216,16 +216,15 @@ async def get_site(site_db_id: int):
 @app.delete("/api/delete-site/{site_db_id}")
 async def delete_site(site_db_id: int):
     """Delete a site and its Mohr readings (cascade)."""
-    from database import get_conn
+    from database import _get_conn
     try:
-        with get_conn() as conn:
+        with _get_conn() as conn:
             with conn.cursor() as cur:
                 cur.execute("DELETE FROM sites WHERE id = %s", (site_db_id,))
             conn.commit()
         return {"status": "deleted", "id": site_db_id}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
 
 @app.get("/health")
 def health():
