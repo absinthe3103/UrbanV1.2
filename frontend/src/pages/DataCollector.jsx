@@ -150,8 +150,8 @@ function MohrTable({readings,onRemove}){
   );
 }
 
-// ── CSV import panel ──────────────────────────────────────────────────────────
-function CsvPanel({onImport}){
+// ── CSV import panel — left: file picker, right: live FS preview ──────────────
+function CsvPanel({onImport, fsNow, fsNowC, mohrDraft}){
   const handleFile=e=>{
     const file=e.target.files[0]; if(!file) return;
     const reader=new FileReader();
@@ -167,24 +167,45 @@ function CsvPanel({onImport}){
     <Card style={{marginBottom:16}}>
       <SectionHeader icon="📂" label="Import from CSV" sub="One file, one or more sites"/>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
+        {/* File picker */}
         <div style={{background:"#f8fafc",border:"2px dashed #cbd5e1",borderRadius:10,padding:"20px 24px",display:"flex",alignItems:"center",gap:14}}>
           <input type="file" accept=".csv,.txt" onChange={handleFile} style={{display:"none"}} id="csvFile"/>
           <label htmlFor="csvFile" style={{display:"flex",alignItems:"center",gap:12,cursor:"pointer",width:"100%"}}>
             <div style={{width:40,height:40,background:"#eff6ff",borderRadius:10,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>📁</div>
             <div>
               <div style={{fontSize:13,fontWeight:600,color:"#374151"}}>Click to choose CSV file</div>
-              <div style={{fontSize:11,color:"#9ca3af",marginTop:2}}>Accepts .csv or .txt</div>
+              <div style={{fontSize:11,color:"#9ca3af",marginTop:2}}>Accepts .csv or .txt — SITE/MOHR row format</div>
             </div>
           </label>
         </div>
-        <div style={{background:"#0f172a",borderRadius:10,padding:"14px 16px",fontFamily:"monospace",fontSize:10,color:"#94a3b8",lineHeight:1.9}}>
-          <div style={{color:"#475569",marginBottom:4,fontFamily:"sans-serif",fontSize:9,letterSpacing:1,textTransform:"uppercase",fontWeight:700}}>File format</div>
-          <div style={{color:"#60a5fa"}}># comment lines ignored</div>
-          <div><span style={{color:"#34d399"}}>SITE</span>,id,L,W,pillars,type,soil,spt,γ,B,Df,GW,load</div>
-          <div><span style={{color:"#f59e0b"}}>MOHR</span>,x,y,c',σ',φ',τ,u</div>
-          <div><span style={{color:"#f59e0b"}}>MOHR</span>,x,y,c',σ',φ',τ,u</div>
-          <div style={{color:"#60a5fa"}}># next site</div>
-          <div><span style={{color:"#34d399"}}>SITE</span>,SITE-002,...</div>
+
+        {/* Live FS preview */}
+        <div style={{
+          display:"flex",flexDirection:"column",justifyContent:"center",alignItems:"center",
+          borderRadius:10,border:`1px solid ${fsNow?(fsNowC.border):"#e2e8f0"}`,
+          background:fsNow?fsNowC.bg:"#f8fafc",padding:"16px 20px",minHeight:90,
+        }}>
+          {fsNow ? (
+            <>
+              <div style={{fontSize:9,fontWeight:700,color:fsNowC.text,letterSpacing:2,marginBottom:6,opacity:0.7}}>LIVE FS PREVIEW</div>
+              <div style={{fontSize:48,fontWeight:900,color:fsNowC.dot,lineHeight:1,fontFamily:"monospace"}}>{fsNow}</div>
+              <div style={{marginTop:8,padding:"3px 16px",borderRadius:20,background:fsNowC.dot+"22",
+                border:`1px solid ${fsNowC.dot}44`,color:fsNowC.text,fontSize:11,fontWeight:700}}>
+                {fsNowC.label}
+              </div>
+              <div style={{fontSize:9,color:fsNowC.text,opacity:0.6,marginTop:6}}>
+                at ({mohrDraft.measureX||"?"}m, {mohrDraft.measureY||"?"}m)
+              </div>
+            </>
+          ) : (
+            <>
+              <div style={{fontSize:9,fontWeight:700,color:"#9ca3af",letterSpacing:2,marginBottom:6}}>LIVE FS PREVIEW</div>
+              <div style={{fontSize:48,fontWeight:900,color:"#d1d5db",lineHeight:1}}>—</div>
+              <div style={{fontSize:11,color:"#9ca3af",marginTop:8,textAlign:"center"}}>
+                Fill Mohr-Coulomb fields<br/>to see live FS
+              </div>
+            </>
+          )}
         </div>
       </div>
     </Card>
@@ -328,10 +349,20 @@ const DataCollector = () => {
   const deleteSite=async(dbId,siteLabel)=>{
     if(!window.confirm(`Delete site "${siteLabel}" (ID ${dbId}) permanently?`)) return;
     try{
-      const res=await fetch(`http://localhost:8000/api/delete-site/${dbId}`,{method:"DELETE"});
-      if(res.ok){await loadRecords();}
-      else{alert("❌ Delete failed.");}
-    }catch(e){alert(`❌ Error: ${e.message}`);}
+      const res=await fetch(`http://localhost:8000/api/delete-site/${dbId}`,{
+        method:"DELETE",
+        headers:{"Content-Type":"application/json"},
+      });
+      if(res.ok){
+        // Remove from local state immediately — no need to wait for full reload
+        setRecords(prev=>prev.filter(r=>r.id!==dbId));
+      } else {
+        const body=await res.json().catch(()=>({}));
+        alert(`❌ Delete failed: ${body.detail||res.statusText}`);
+      }
+    }catch(e){
+      alert(`❌ Cannot reach backend.\nMake sure the server is running on port 8000.\n\n${e.message}`);
+    }
   };
 
   const fsNow=calcFs(mohrDraft);
@@ -354,8 +385,8 @@ const DataCollector = () => {
         )}
       </div>
 
-      {/* CSV import */}
-      <CsvPanel onImport={importSites}/>
+      {/* CSV import + live FS preview */}
+      <CsvPanel onImport={importSites} fsNow={fsNow} fsNowC={fsNowC} mohrDraft={mohrDraft}/>
 
       {/* Site + Terzaghi */}
       <Card style={{marginBottom:16}}>
@@ -389,12 +420,11 @@ const DataCollector = () => {
           </div>
         </div>
         {fsNow&&fsNowC&&(
-          <div style={{display:"inline-flex",alignItems:"center",gap:10,marginBottom:12,background:fsNowC.bg,border:`1px solid ${fsNowC.border}`,borderRadius:8,padding:"8px 16px"}}>
-            <div style={{width:10,height:10,borderRadius:"50%",background:fsNowC.dot}}/>
-            <span style={{fontSize:11,color:fsNowC.text}}>Live FS preview:</span>
-            <span style={{fontSize:18,fontWeight:900,color:fsNowC.dot,fontFamily:"monospace"}}>{fsNow}</span>
-            <span style={{fontSize:11,fontWeight:700,color:fsNowC.text}}>{fsNowC.label}</span>
-            <span style={{fontSize:10,color:fsNowC.text,opacity:0.7}}>at ({mohrDraft.measureX||"?"}m, {mohrDraft.measureY||"?"}m)</span>
+          <div style={{display:"inline-flex",alignItems:"center",gap:8,marginBottom:12,
+            background:fsNowC.bg,border:`1px solid ${fsNowC.border}`,borderRadius:8,padding:"6px 14px"}}>
+            <div style={{width:8,height:8,borderRadius:"50%",background:fsNowC.dot}}/>
+            <span style={{fontSize:11,color:fsNowC.text,fontWeight:700,fontFamily:"monospace"}}>{fsNow}</span>
+            <span style={{fontSize:11,color:fsNowC.text}}>{fsNowC.label}</span>
           </div>
         )}
         <button onClick={addMohr} style={{...s.addBtn,maxWidth:300}}>
